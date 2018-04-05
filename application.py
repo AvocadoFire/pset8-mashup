@@ -43,7 +43,7 @@ def articles():
     # Search for articles in geo
     articles = lookup(area)
 
-    # return up to 5 articles as a JSON object
+    # return up to 10 articles as a JSON object
     if len(articles) > 10:
         return jsonify([articles[0], articles[1], articles[2], articles[4],
             articles[5], articles[6], articles[7], articles[8], articles[9], articles[10]])

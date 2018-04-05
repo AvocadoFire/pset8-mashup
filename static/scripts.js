@@ -38,15 +38,16 @@ $(document).ready(function() {
     // Options for map
     // https://developers.google.com/maps/documentation/javascript/reference#MapOptions
     let options = {
-        center: {lat: 54.5177992, lng: -4.5674474}, // UK Centralised
+        center: {lat: 53.4807593, lng: -2.2426305}, // UK Centralised
         disableDefaultUI: true,
         mapTypeId: google.maps.MapTypeId.ROADMAP,
         maxZoom: 20,
         panControl: true,
         styles: styles,
-        zoom: 6,
+        zoom: 13,
         zoomControl: true
     };
+
 
 
 
@@ -71,25 +72,29 @@ function addMarker(place)
         animation: google.maps.Animation.DROP,
         title: place.place_name +", "+ place.admin_name2,
         label: place.place_name +", "+ place.admin_name2,
+
     });
 
-    // Get articles
+    // Add marker to map markers
+    markers.push(marker);
+
+    // Get articles, UK google news doesn't support post codes though, so need to go up to city/county level
     $.getJSON("/articles", {geo: place.admin_name2}, function(articles) {
 
-        // Only display infowindow if articles exist
+        // If there are articles available
         if (!$.isEmptyObject(articles))
         {
-			// start Unordered List
+			// Create a list
             var articlesContent = "<ul>";
             for (var i = 0; i < articles.length; i++)
             {
-				//Each list item is stored into articlesString
+				// Store each item in articlesString
             	articlesContent += "<li><a target='_NEW' href='" + articles[i].link
             	+ "'>" + articles[i].title + "</a></li>";
             }
         }
 
-        // Close articles
+        // Add a closing brace to the end of each list item
         articlesContent += "</ul>";
 
         // Listen for clicks
@@ -97,8 +102,8 @@ function addMarker(place)
             showInfo(marker, articlesContent);
         });
     });
-    // Add marker to map markers
-    markers.push(marker);
+
+
 }
 
 
@@ -173,7 +178,7 @@ function configure()
 // Remove markers from map
 function removeMarkers()
 {
-   // remove all markers from the map
+   // Iteratre over markers[] and remove each one in turn
     for (var i = 0, n = markers.length; i < n; i++)
     {
 	    markers[i].setMap(null);
