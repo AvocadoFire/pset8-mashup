@@ -2,7 +2,7 @@
 let map;
 
 // Markers for map
-let markers = [];
+var markers = [];
 
 // Info window
 let info = new google.maps.InfoWindow();
@@ -38,15 +38,16 @@ $(document).ready(function() {
     // Options for map
     // https://developers.google.com/maps/documentation/javascript/reference#MapOptions
     let options = {
-        center: {lat: 53.4575955, lng: -2.1578377}, // Manchester
+        center: {lat: 54.5177992, lng: -4.5674474}, // UK Centralised
         disableDefaultUI: true,
         mapTypeId: google.maps.MapTypeId.ROADMAP,
         maxZoom: 20,
         panControl: true,
         styles: styles,
-        zoom: 10,
+        zoom: 6,
         zoomControl: true
     };
+
 
 
     // Get DOM node in which map will be instantiated
@@ -72,32 +73,32 @@ function addMarker(place)
         label: place.place_name +", "+ place.admin_name2,
     });
 
+    // Get articles
+    $.getJSON("/articles", {geo: place.admin_name2}, function(articles) {
 
-
-    var parameters = {
-        geo: place.postal_code
-    };
-    var content = "";
-    $.getJSON(Flask.url_for("articles"), parameters)
-    .done(function(data, textStatus, jqXHR) {
-
-
-        for (var i = 0; i < 5; i++)
+        // Only display infowindow if articles exist
+        if (!$.isEmptyObject(articles))
         {
-            content +=  "<li><a href= \"" + data[i].link + "\" target=\"_blank\">" + data[i].title + "</a></li>";
+			// start Unordered List
+            var articlesContent = "<ul>";
+            for (var i = 0; i < articles.length; i++)
+            {
+				//Each list item is stored into articlesString
+            	articlesContent += "<li><a target='_NEW' href='" + articles[i].link
+            	+ "'>" + articles[i].title + "</a></li>";
+            }
         }
-        google.maps.event.addListener(marker, "click", function() {
-        showInfo(marker, content);
+
+        // Close articles
+        articlesContent += "</ul>";
+
+        // Listen for clicks
+        google.maps.event.addListener(marker,'click',function() {
+            showInfo(marker, articlesContent);
+        });
     });
-    })
-    .fail(function(jqXHR, textStatus, errorThrown) {
-
-        // log error to browser's console
-        console.log(errorThrown.toString());
-    });
-markers.push(marker);
-
-
+    // Add marker to map markers
+    markers.push(marker);
 }
 
 
@@ -172,10 +173,10 @@ function configure()
 // Remove markers from map
 function removeMarkers()
 {
-
-    while(markers.length != 0)
+   // remove all markers from the map
+    for (var i = 0, n = markers.length; i < n; i++)
     {
-        markers.pop().setMap(null);
+	    markers[i].setMap(null);
     }
 
 }
