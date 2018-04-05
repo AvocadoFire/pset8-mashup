@@ -2,7 +2,7 @@
 let map;
 
 // Markers for map
-let markers = [];
+var markers = [];
 
 // Info window
 let info = new google.maps.InfoWindow();
@@ -38,15 +38,18 @@ $(document).ready(function() {
     // Options for map
     // https://developers.google.com/maps/documentation/javascript/reference#MapOptions
     let options = {
-        center: {lat: 37.4236, lng: -122.1619}, // Stanford, California
+        center: {lat: 53.4807593, lng: -2.2426305}, // UK Centralised
         disableDefaultUI: true,
         mapTypeId: google.maps.MapTypeId.ROADMAP,
-        maxZoom: 14,
+        maxZoom: 20,
         panControl: true,
         styles: styles,
         zoom: 13,
         zoomControl: true
     };
+
+
+
 
     // Get DOM node in which map will be instantiated
     let canvas = $("#map-canvas").get(0);
@@ -63,7 +66,44 @@ $(document).ready(function() {
 // Add marker for place to map
 function addMarker(place)
 {
-    // TODO
+    var marker = new google.maps.Marker({
+        position: {lat:place.latitude, lng: place.longitude},
+        map:map,
+        animation: google.maps.Animation.DROP,
+        title: place.place_name +", "+ place.admin_name2,
+        label: place.place_name +", "+ place.admin_name2,
+
+    });
+
+    // Add marker to map markers
+    markers.push(marker);
+
+    // Get articles, UK google news doesn't support post codes though, so need to go up to city/county level
+    $.getJSON("/articles", {geo: place.admin_name2}, function(articles) {
+
+        // If there are articles available
+        if (!$.isEmptyObject(articles))
+        {
+			// Create a list
+            var articlesContent = "<ul>";
+            for (var i = 0; i < articles.length; i++)
+            {
+				// Store each item in articlesString
+            	articlesContent += "<li><a target='_NEW' href='" + articles[i].link
+            	+ "'>" + articles[i].title + "</a></li>";
+            }
+        }
+
+        // Add a closing brace to the end of each list item
+        articlesContent += "</ul>";
+
+        // Listen for clicks
+        google.maps.event.addListener(marker,'click',function() {
+            showInfo(marker, articlesContent);
+        });
+    });
+
+
 }
 
 
@@ -98,7 +138,7 @@ function configure()
         templates: {
             suggestion: Handlebars.compile(
                 "<div>" +
-                "TODO" +
+                "{{ place_name }}, {{admin_name1}}, {{ postal_code}}" +
                 "</div>"
             )
         }
@@ -122,8 +162,8 @@ function configure()
     // Re-enable ctrl- and right-clicking (and thus Inspect Element) on Google Map
     // https://chrome.google.com/webstore/detail/allow-right-click/hompjdfbfmmmgflfjdlnkohcplmboaeo?hl=en
     document.addEventListener("contextmenu", function(event) {
-        event.returnValue = true; 
-        event.stopPropagation && event.stopPropagation(); 
+        event.returnValue = true;
+        event.stopPropagation && event.stopPropagation();
         event.cancelBubble && event.cancelBubble();
     }, true);
 
@@ -138,7 +178,12 @@ function configure()
 // Remove markers from map
 function removeMarkers()
 {
-    // TODO
+   // Iteratre over markers[] and remove each one in turn
+    for (var i = 0, n = markers.length; i < n; i++)
+    {
+	    markers[i].setMap(null);
+    }
+
 }
 
 
@@ -150,7 +195,7 @@ function search(query, syncResults, asyncResults)
         q: query
     };
     $.getJSON("/search", parameters, function(data, textStatus, jqXHR) {
-     
+
         // Call typeahead's callback with search results (i.e., places)
         asyncResults(data);
     });
@@ -184,7 +229,7 @@ function showInfo(marker, content)
 
 
 // Update UI's markers
-function update() 
+function update()
 {
     // Get map's bounds
     let bounds = map.getBounds();
